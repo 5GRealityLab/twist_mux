@@ -16,11 +16,13 @@
 # Author: Brighten Lee
 
 import os
+import launch
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
 
 
 def generate_launch_description():
@@ -30,6 +32,7 @@ def generate_launch_description():
                                          'config', 'twist_mux_topics.yaml')
     default_config_joystick = os.path.join(get_package_share_directory('twist_mux'),
                                            'config', 'joystick.yaml')
+    Namespace = LaunchConfiguration('Namespace')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -46,13 +49,19 @@ def generate_launch_description():
             description='Default joystick config file'),
         DeclareLaunchArgument(
             'cmd_vel_out',
-            default_value='twist_mux/cmd_vel',
+            default_value='cmd_vel',
             description='cmd vel output topic'),
+        DeclareLaunchArgument(
+            'Namespace',
+            default_value='tb3_0'
+        ),
+        
         Node(
             package='twist_mux',
             executable='twist_mux',
+            namespace=Namespace,
             output='screen',
-            remappings={('/cmd_vel_out', LaunchConfiguration('cmd_vel_out'))},
+            remappings={('cmd_vel_out', LaunchConfiguration('cmd_vel_out'))},
             parameters=[
                 LaunchConfiguration('config_locks'),
                 LaunchConfiguration('config_topics'),
@@ -62,8 +71,9 @@ def generate_launch_description():
         Node(
             package='twist_mux',
             executable='twist_marker',
+            # namespace='tb3_0',
             output='screen',
-            remappings={('/twist', LaunchConfiguration('cmd_vel_out'))},
+            remappings={('twist', LaunchConfiguration('cmd_vel_out'))},
             parameters=[{
                 'frame_id': 'base_link',
                 'scale': 1.0,
